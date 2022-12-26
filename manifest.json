@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "GovUK",
+  "version": "1.0.0",
+  "description": "hey this is just a test extention",
+  "icons": {
+    "128": "./icons/128.png",
+    "48": "./icons/48.png",
+    "32": "./icons/32.png",
+    "16": "./icons/16.png"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_icons": {
+      "128": "./icons/128.png",
+      "48": "./icons/48.png",
+      "32": "./icons/32.png",
+      "16": "./icons/16.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "externally_connectable": {
+    "matches": ["*://*.gov.uk/*"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.gov.uk/*"],
+      "run_at": "document_end",
+      "js": ["./contentScript.js", "./scripts/require.js"]
+    }
+  ],
+  "host_permissions": ["*://*.gov.uk/*"],
+  "permissions": ["tabs", "storage"]
+}
