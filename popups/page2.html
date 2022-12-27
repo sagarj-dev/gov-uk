@@ -4,41 +4,35 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
-      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-      crossorigin="anonymous"
-    /> -->
-    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="page2.css" />
     <link
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
     />
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.8.1/css/bootstrap-select.css"
     />
     <title>Document</title>
-    <style>
-      body {
-        width: 600px;
-        height: 500px;
-      }
-    </style>
   </head>
   <body>
     <div class="container">
-      <select
-        class="selectpicker"
-        multiple
-        data-live-search="true"
-        id="selectpicker"
-      >
-        <!-- <option value="Mustard">Mustard</option>
-        <option value="Ketchup">Ketchup</option>
-        <option value="Relish">Relish</option> -->
-      </select>
+      <div class="inputsContainer">
+        <input
+          type="number"
+          class="form-control"
+          id="slots"
+          placeholder="Number of slots required"
+        />
+        <select
+          class="selectpicker"
+          multiple
+          data-live-search="true"
+          id="selectpicker"
+        ></select>
+        <button class="btn btn-primary" id="submit">Start</button>
+      </div>
     </div>
 
     <script src="../jq.js"></script>

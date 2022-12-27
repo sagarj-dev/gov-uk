@@ -5,7 +5,30 @@ async function getCurrentURL() {
   return tab;
 }
 
+function waitForElm(selector) {
+  return new Promise((resolve) => {
+    if (document.querySelector(selector)) {
+      return resolve(document.querySelector(selector));
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      if (document.querySelector(selector)) {
+        resolve(document.querySelector(selector));
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  });
+}
+
 (async () => {
+  // setTimeout(() => {
+  //   checkForSlotOnPage();
+  // }, 1000);
   ////// GET STARTED PAGE ///////////
   if (
     document.querySelectorAll(
@@ -33,7 +56,7 @@ async function getCurrentURL() {
     // do something with response here, not outside the function
   }
 
-  /////////// PAGE 2 - SLOT SELECTION PAGE ////////////
+  /////////// PAGE 2 - Test centre availability  ////////////
   if (document.getElementById("submitAddAdditionalTestCentre")) {
     await chrome.runtime.sendMessage({
       type: "SET_POPUP",
@@ -42,23 +65,35 @@ async function getCurrentURL() {
 
     const options = document.querySelectorAll("option[value]");
     let optionsJSON = [];
-    options.forEach((o) => {
-      optionsJSON.push({ value: o.value, label: o.innerText });
+    options.forEach((o, i) => {
+      if (i) {
+        optionsJSON.push({ value: o.value, label: o.innerText });
+      }
     });
 
-    // await chrome.storage.local.clear("GOVUK_LOCATIONS");
     await chrome.storage.local.set({ GOVUK_LOCATIONS: optionsJSON });
-
-    // console.log(optionsJSON);
+    setTimeout(() => {
+      addCenter();
+      checkForSlotOnPage();
+    }, 500);
   }
 
-  /////////// PAGE 3 - Test centre availability /////////////
+  /////////// PAGE 3 - SLOT SELECTION PAGE /////////////
 
-  if (document.querySelectorAll("table[id='displaySlot']")[0]) {
+  if (
+    document.querySelectorAll("table[id='displaySlot']")[0] ||
+    document
+      .getElementsByClassName("laquo")[0]
+      .innerText.includes("Return to search results")
+  ) {
     await chrome.runtime.sendMessage({
       type: "SET_POPUP",
       payload: "./popups/page3.html",
     });
+
+    setTimeout(() => {
+      bookSlot();
+    }, 500);
   }
 
   //////////////// PAGE 4 - submitDismissReservedSlotMessage///////////
@@ -86,4 +121,81 @@ async function getCurrentURL() {
       payload: "./popups/page6.html",
     });
   }
+
+  ////// handle add center////////
+
+  chrome.runtime.onMessage.addListener(async function (
+    request,
+    sender,
+    sendResponse
+  ) {
+    if (request.type === "ADD_LOCATION") {
+      addCenter();
+    }
+  });
 })();
+
+async function addCenter() {
+  const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+  console.log(GOV_UK_DATA);
+  if (GOV_UK_DATA.locations.length) {
+    const value = GOV_UK_DATA.locations.shift();
+
+    await chrome.storage.local.set({
+      GOV_UK_DATA,
+    });
+
+    const select = await waitForElm("#add_testcentre");
+    select.value = value;
+    const addCenterButton = await waitForElm("#submitAddAdditionalTestCentre");
+    addCenterButton.click();
+  }
+}
+
+async function checkForSlotOnPage() {
+  const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+
+  if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
+    console.log("checkoing for slots");
+    const slotsArray = document.querySelectorAll(".slotsavailable a");
+    console.log("slotsArray", slotsArray);
+    console.log("lenght", slotsArray.length);
+    if (slotsArray.length) {
+      slotsArray[0].click();
+      console.log("slots Available");
+    } else {
+      console.log("no slots found");
+      const nextButton = await waitForElm("#searchForWeeklySlotsNextAvailable");
+
+      // nextButton.click();
+    }
+  }
+}
+
+async function bookSlot() {
+  const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+
+  console.log("req slots: ", GOV_UK_DATA.slots);
+  let reserveButton = document.querySelectorAll(".reserve a");
+  console.log("reserveButton len", reserveButton);
+  if (GOV_UK_DATA.slots > 0) {
+    if (reserveButton.length > 0) {
+      await chrome.storage.local.set({
+        GOV_UK_DATA: {
+          ...GOV_UK_DATA,
+          slots: GOV_UK_DATA.slots - 1,
+        },
+      });
+
+      reserveButton[0].click();
+    } else {
+      console.log("returning");
+      const backToSearchButton = await waitForElm(".laquo");
+      console.log("back button", backToSearchButton);
+      backToSearchButton.click();
+    }
+  } else {
+    const nextStepButton = await waitForElm("#bookReserved");
+    nextStepButton.click();
+  }
+}

@@ -1,0 +1,11 @@
+body {
+  width: 600px;
+  height: 500px;
+  padding: 2rem 0;
+}
+
+.inputsContainer {
+  display: grid;
+  grid-template-columns: 2fr 3fr 2fr;
+  gap: 1rem;
+}

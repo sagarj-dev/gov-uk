@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  $("select").selectpicker();
+  // $("select").selectpicker();
 
   const data = await chrome.storage.sync.get("options");
   console.log(data);
