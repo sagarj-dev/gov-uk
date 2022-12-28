@@ -26,9 +26,6 @@ function waitForElm(selector) {
 }
 
 (async () => {
-  // setTimeout(() => {
-  //   checkForSlotOnPage();
-  // }, 1000);
   ////// GET STARTED PAGE ///////////
   if (
     document.querySelectorAll(
@@ -52,6 +49,9 @@ function waitForElm(selector) {
     await chrome.runtime.sendMessage({
       type: "SET_POPUP",
       payload: "./popups/page1.html",
+    });
+    await chrome.storage.local.set({
+      GOV_UK_DATA: { slots: 0, locations: [] },
     });
     // do something with response here, not outside the function
   }
@@ -84,7 +84,7 @@ function waitForElm(selector) {
     document.querySelectorAll("table[id='displaySlot']")[0] ||
     document
       .getElementsByClassName("laquo")[0]
-      .innerText.includes("Return to search results")
+      ?.innerText.includes("Return to search results")
   ) {
     await chrome.runtime.sendMessage({
       type: "SET_POPUP",
@@ -93,7 +93,7 @@ function waitForElm(selector) {
 
     setTimeout(() => {
       bookSlot();
-    }, 500);
+    }, 1000);
   }
 
   //////////////// PAGE 4 - submitDismissReservedSlotMessage///////////
@@ -137,10 +137,11 @@ function waitForElm(selector) {
 
 async function addCenter() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
-  console.log(GOV_UK_DATA);
   if (GOV_UK_DATA.locations.length) {
     const value = GOV_UK_DATA.locations.shift();
-
+    if (GOV_UK_DATA.locations.length == 0) {
+      GOV_UK_DATA.status = "start_looking_for_slots";
+    }
     await chrome.storage.local.set({
       GOV_UK_DATA,
     });
@@ -154,20 +155,20 @@ async function addCenter() {
 
 async function checkForSlotOnPage() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+  console.log(GOV_UK_DATA);
 
   if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
-    console.log("checkoing for slots");
-    const slotsArray = document.querySelectorAll(".slotsavailable a");
-    console.log("slotsArray", slotsArray);
-    console.log("lenght", slotsArray.length);
-    if (slotsArray.length) {
-      slotsArray[0].click();
-      console.log("slots Available");
-    } else {
-      console.log("no slots found");
-      const nextButton = await waitForElm("#searchForWeeklySlotsNextAvailable");
-
-      // nextButton.click();
+    for (let index = 0; index < 5; index++) {
+      const slotsArray = document.querySelectorAll(".slotsavailable a");
+      if (slotsArray.length) {
+        slotsArray[0].click();
+      } else {
+        console.log("no slots found");
+        const nextButton = await waitForElm(
+          "#searchForWeeklySlotsNextAvailable"
+        );
+        nextButton.click();
+      }
     }
   }
 }

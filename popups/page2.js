@@ -1,5 +1,4 @@
 (async function () {
-  console.log("===>");
   const { GOVUK_LOCATIONS } = await chrome.storage.local.get("GOVUK_LOCATIONS");
   $("#selectpicker").selectpicker();
   var p = $("#selectpicker");
@@ -22,7 +21,6 @@
           1
         );
       }
-      console.log(selectedValues);
     }
   );
 
@@ -43,6 +41,7 @@
       await chrome.tabs.sendMessage(tab.id, {
         type: "ADD_LOCATION",
       });
+      window.close();
     }
   });
 })();
