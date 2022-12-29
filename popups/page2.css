@@ -4,8 +4,39 @@ body {
   padding: 2rem 0;
 }
 
+h5,
+span {
+  margin: 0;
+  padding: 0;
+}
+
 .inputsContainer {
   display: grid;
   grid-template-columns: 2fr 3fr 2fr;
   gap: 1rem;
+}
+
+.selectedLocations {
+  margin-top: 1rem;
+}
+.selectedLocation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selectedLocation button {
+  display: grid;
+  place-items: center;
+  font-weight: bolder;
+  background-color: red;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  border: none;
+}
+
+.selectedLocation h5:hover {
+  filter: brightness(85%);
 }

@@ -5,6 +5,10 @@ async function getCurrentURL() {
   return tab;
 }
 
+function genarateDelaySec() {
+  return Math.floor(Math.random() * (3000 - 1500 + 1) + 1500);
+}
+
 function waitForElm(selector) {
   return new Promise((resolve) => {
     if (document.querySelector(selector)) {
@@ -71,11 +75,22 @@ function waitForElm(selector) {
       }
     });
 
+    let DEFAULT_VALUE_TEXT = document.querySelectorAll(
+      "#browseslots tbody tr.testcatfirst span.bold"
+    )[0].innerText;
+    let DEFAULT_VALUE = optionsJSON.filter(
+      (a) => a.label == DEFAULT_VALUE_TEXT
+    );
+
+    await chrome.storage.local.set({
+      GOVUK_DEFAULT_LOCATION: DEFAULT_VALUE[0].value,
+    });
+
     await chrome.storage.local.set({ GOVUK_LOCATIONS: optionsJSON });
     setTimeout(() => {
       addCenter();
       checkForSlotOnPage();
-    }, 500);
+    }, genarateDelaySec());
   }
 
   /////////// PAGE 3 - SLOT SELECTION PAGE /////////////
@@ -93,7 +108,7 @@ function waitForElm(selector) {
 
     setTimeout(() => {
       bookSlot();
-    }, 1000);
+    }, genarateDelaySec());
   }
 
   //////////////// PAGE 4 - submitDismissReservedSlotMessage///////////
