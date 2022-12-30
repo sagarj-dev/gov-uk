@@ -8,7 +8,10 @@
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
     />
-
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.8.1/css/bootstrap-select.css"
@@ -24,6 +27,8 @@
           class="form-control"
           id="slots"
           placeholder="Number of slots required"
+          min="1"
+          max="10"
         />
         <select
           class="selectpicker"
@@ -33,13 +38,34 @@
         ></select>
         <button class="btn btn-primary" id="submit">Start</button>
       </div>
-
+      <br />
+      <div class="row">
+        <div class="col-sm-3">
+          <div class="form-group">
+            <div id="filterDate2">
+              <!-- Datepicker as text field -->
+              <div class="input-group date" data-date-format="dd.mm.yyyy">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="dd.mm.yyyy"
+                />
+                <div class="input-group-addon">
+                  <span class="glyphicon glyphicon-th"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="list-group selectedLocations" id="selectedLocations"></div>
     </div>
 
-    <script src="../jq.js"></script>
-    <script src="../bootstrap.js"></script>
-    <script src="../boottSelect.js"></script>
+    <script src="../scripts/jq.js"></script>
+    <script src="../scripts/bootstrap.js"></script>
+    <script src="../scripts/boottSelect.js"></script>
+    <script type="text/javascript" src="../scripts/bootDateSelect.js"></script>
+    <script type="text/javascript" src="../scripts/moment.js"></script>
     <script src="page2.js"></script>
   </body>
 </html>

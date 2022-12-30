@@ -1,19 +1,33 @@
 let selectedValues = [];
-
+let lastDate = "";
 (async function () {
+  //////////////////////////
   const { GOVUK_LOCATIONS } = await chrome.storage.local.get("GOVUK_LOCATIONS");
   const { GOVUK_DEFAULT_LOCATION } = await chrome.storage.local.get(
     "GOVUK_DEFAULT_LOCATION"
   );
-  console.log(GOVUK_DEFAULT_LOCATION);
+  ////////////////////////
+
+  ////////////////////////////////
   $("#selectpicker").selectpicker({ maxOptions: 5 });
+  /////////////////////
+
+  $(".input-group.date").datepicker({ format: "dd.mm.yyyy" });
+  $(".input-group.date")
+    .datepicker()
+    .on("changeDate", function (e) {
+      lastDate = moment(e.date).format("D MMMM YYYY");
+    });
+  ////////////////
+
   var p = $("#selectpicker");
   GOVUK_LOCATIONS.forEach((d, i) => {
     p.append($("<option>", { selected: false, text: d.label, value: d.value }));
   });
-  console.log(GOVUK_LOCATIONS);
   $("#selectpicker").selectpicker("refresh");
   $(".selectpicker").selectpicker("val", GOVUK_DEFAULT_LOCATION);
+  ///////////////////
+
   /////////////////// handle selected value //////////
   $("#selectpicker").on(
     "changed.bs.select",
@@ -36,14 +50,21 @@ let selectedValues = [];
       renderSelectedLocation();
     }
   );
+  ////////////////////////////
 
   $("#submit").click(async () => {
     const numberOfSlots = document.getElementById("slots").value;
-    if (numberOfSlots && selectedValues.length) {
+    if (
+      numberOfSlots > 0 &&
+      numberOfSlots <= 10 &&
+      selectedValues.length &&
+      lastDate
+    ) {
       await chrome.storage.local.set({
         GOV_UK_DATA: {
           locations: selectedValues,
           slots: parseInt(numberOfSlots),
+          lastDate: lastDate,
         },
       });
       const [tab] = await chrome.tabs.query({
@@ -56,6 +77,7 @@ let selectedValues = [];
       window.close();
     }
   });
+  ///////////////////////////////////
 
   $("body").delegate(".location", "click", function (event) {
     selectedValues.splice(parseInt(event.target.id), 1);
@@ -65,6 +87,7 @@ let selectedValues = [];
       ...selectedValues,
     ]);
   });
+  ////////////////////////////////////////
 
   function renderSelectedLocation() {
     if (!selectedValues.length) {
