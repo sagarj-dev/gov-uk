@@ -187,7 +187,7 @@ async function resetClicks() {
 
 async function addCenter() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
-  if (GOV_UK_DATA.locations.length) {
+  if (GOV_UK_DATA.locations.length > 0) {
     const value = GOV_UK_DATA.locations.shift();
     if (GOV_UK_DATA.locations.length == 0) {
       GOV_UK_DATA.status = "start_looking_for_slots";
@@ -220,26 +220,57 @@ async function isValidWeek(selectedDate) {
     arr[1][0] = arr[1][0].slice(0, -2);
     let endDate = new Date(arr[1].join(" "));
 
+    if (endDate < selectedDate && startDate < selectedDate) {
+      resolve("valid");
+    }
+
     if (
       startDate - selectedDate === 0 ||
       endDate - selectedDate === 0 ||
-      endDate < selectedDate
+      (startDate < selectedDate && endDate > selectedDate)
     ) {
-      resolve(true);
+      resolve("last");
     }
-    if (startDate > selectedDate || endDate < selectedDate) {
+    if (startDate > selectedDate && endDate > selectedDate) {
+      console.log("startDate > selectedDate", startDate > selectedDate);
+      console.log("endDate > selectedDate", endDate > selectedDate);
+      resolve("notValid");
+    }
+  });
+}
+
+async function compareDayName(slotDayName, selectedDate) {
+  return new Promise((resolve, reject) => {
+    var dayNames = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    selectedDate = new Date(selectedDate);
+    let selectedDay = selectedDate.toLocaleDateString("en-GB", {
+      weekday: "long",
+    });
+
+    let slotDayIndex = dayNames.indexOf(slotDayName);
+    let selectedDayIndex = dayNames.indexOf(selectedDay);
+    if (selectedDayIndex >= slotDayIndex) {
+      resolve(true);
+    } else {
       resolve(false);
     }
-    resolve(true);
   });
 }
 
 async function checkForSlotOnPage() {
-  console.log("checking for slots");
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
-  console.log(GOV_UK_DATA);
 
-  if (await isValidWeek(GOV_UK_DATA.lastDate)) {
+  let week = await isValidWeek(GOV_UK_DATA.lastDate);
+
+  if (week == "valid") {
     if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
       for (let index = 0; index < 5; index++) {
         const slotsArray = document.querySelectorAll(".slotsavailable a");
@@ -247,7 +278,6 @@ async function checkForSlotOnPage() {
           increaseClickCound();
           slotsArray[0].click();
         } else {
-          alert("no slots found");
           const nextButton = await waitForElm(
             "#searchForWeeklySlotsNextAvailable"
           );
@@ -256,24 +286,62 @@ async function checkForSlotOnPage() {
         }
       }
     }
-  } else {
+  }
+
+  if (week == "last") {
+    if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
+      setTimeout(async () => {
+        let slots = document.querySelectorAll(".slotsavailable");
+
+        if (slots.length > 0) {
+          for (let index = 0; index < slots.length; index++) {
+            const slot = slots[index];
+            let dayName = slot.headers;
+            if (await compareDayName(dayName, GOV_UK_DATA.lastDate)) {
+              const aTage = slot.childNodes[1];
+              aTage.click();
+            } else {
+              setTimeout(() => {
+                calcelProcess();
+              }, 500);
+            }
+            break;
+          }
+        } else {
+          calcelProcess();
+        }
+      }, 500);
+    }
+  }
+
+  if (week == "notValid") {
+    calcelProcess();
+  }
+
+  async function calcelProcess() {
     alert("cant find anymore slots");
+
     await chrome.storage.local.set({
       GOV_UK_DATA: {
         locations: [],
         slots: 0,
-        lastDate: lastDate,
+        lastDate: null,
+        status: null,
       },
     });
+    const nextButton = document.getElementById("bookReserved");
+    console.log("nextButton", nextButton);
+    if (nextButton) {
+      increaseClickCound();
+      nextButton.click();
+    }
   }
 }
 
 async function bookSlot() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
 
-  console.log("req slots: ", GOV_UK_DATA.slots);
   let reserveButton = document.querySelectorAll(".reserve a");
-  console.log("reserveButton len", reserveButton);
   if (GOV_UK_DATA.slots > 0) {
     if (reserveButton.length > 0) {
       await chrome.storage.local.set({
