@@ -55,6 +55,7 @@ let lastDate = "";
     await chrome.storage.local.set({
       GOV_UK_DATA: { slots: 0, locations: [] },
     });
+    window.close();
   });
   $("#submit").click(async () => {
     const numberOfSlots = document.getElementById("slots").value;
@@ -78,7 +79,6 @@ let lastDate = "";
       await chrome.tabs.sendMessage(tab.id, {
         type: "ADD_LOCATION",
       });
-      // window.close();
     }
   });
   ///////////////////////////////////
