@@ -40,10 +40,13 @@ async function increaseClickCound() {
   }
 }
 async function resetClicks() {
+  console.log("reset fun runs");
   let { GOVUK_CLICKS_DATE } = await chrome.storage.local.get(
     "GOVUK_CLICKS_DATE"
   ); // prev date
   let todayDate = new Date();
+  console.log("storage date", GOVUK_CLICKS_DATE);
+  console.log("today date", todayDate.getDate());
 
   if (GOVUK_CLICKS_DATE) {
     if (GOVUK_CLICKS_DATE != todayDate.getDate()) {
@@ -353,9 +356,7 @@ async function bookSlot() {
       increaseClickCound();
       reserveButton[0].click();
     } else {
-      console.log("returning");
       const backToSearchButton = await waitForElm(".laquo");
-      console.log("back button", backToSearchButton);
       increaseClickCound();
       backToSearchButton.click();
     }

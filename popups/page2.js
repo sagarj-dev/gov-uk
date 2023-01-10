@@ -51,7 +51,11 @@ let lastDate = "";
     }
   );
   ////////////////////////////
-
+  $("#stop").click(async () => {
+    await chrome.storage.local.set({
+      GOV_UK_DATA: { slots: 0, locations: [] },
+    });
+  });
   $("#submit").click(async () => {
     const numberOfSlots = document.getElementById("slots").value;
     if (
@@ -74,7 +78,7 @@ let lastDate = "";
       await chrome.tabs.sendMessage(tab.id, {
         type: "ADD_LOCATION",
       });
-      window.close();
+      // window.close();
     }
   });
   ///////////////////////////////////
