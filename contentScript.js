@@ -273,7 +273,7 @@ async function checkForSlotOnPage() {
 
   let week = await isValidWeek(GOV_UK_DATA.lastDate);
 
-  if (week == "valid") {
+  if (week === "valid") {
     if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
       for (let index = 0; index < 5; index++) {
         const slotsArray = document.querySelectorAll(".slotsavailable a");
@@ -320,23 +320,49 @@ async function checkForSlotOnPage() {
   if (week == "notValid") {
     calcelProcess();
   }
+}
 
-  async function calcelProcess() {
-    alert("cant find anymore slots");
-
+async function calcelProcess() {
+  const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+  if (GOV_UK_DATA.slots === 0) {
     await chrome.storage.local.set({
       GOV_UK_DATA: {
         locations: [],
         slots: 0,
         lastDate: null,
         status: null,
+        is_loop: false,
       },
     });
     const nextButton = document.getElementById("bookReserved");
-    console.log("nextButton", nextButton);
     if (nextButton) {
       increaseClickCound();
       nextButton.click();
+    }
+  } else {
+    alert("cant find anymore slots");
+    const prevButton = document.getElementById(
+      "searchForWeeklySlotsPreviousAvailable"
+    );
+    if (prevButton) {
+      increaseClickCound();
+      prevButton.click();
+      setTimeout(() => {
+        const errElm = document.getElementsByClassName("error");
+        const prevWeekButton = document.getElementById(
+          "searchForWeeklySlotsPreviousWeek"
+        );
+        if (errElm && prevWeekButton) {
+          increaseClickCound();
+          prevWeekButton.click();
+        }
+      }, 500);
+    }
+    if (GOV_UK_DATA.is_loop) {
+      setTimeout(() => {
+        console.log("calling loop");
+        checkForSlotOnPage();
+      }, GOV_UK_DATA.loopDelay);
     }
   }
 }

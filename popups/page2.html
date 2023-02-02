@@ -17,6 +17,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.8.1/css/bootstrap-select.css"
     />
     <link rel="stylesheet" href="page2.css" />
+    <link rel="stylesheet" href="switch.css" />
     <title>Document</title>
   </head>
   <body>
@@ -39,8 +40,8 @@
         <button class="btn btn-primary" id="submit">Start</button>
       </div>
       <br />
-      <div class="row">
-        <div class="col-sm-3">
+      <div class="row2">
+        <div class="col1">
           <div class="form-group">
             <div id="filterDate2">
               <!-- Datepicker as text field -->
@@ -56,6 +57,34 @@
               </div>
             </div>
           </div>
+        </div>
+        <div class="col2">
+          <div>
+            <h4>Loop:</h4>
+
+            <div class="onoffswitch4">
+              <input
+                type="checkbox"
+                name="onoffswitch4"
+                class="onoffswitch4-checkbox"
+                id="myonoffswitch4"
+              />
+              <label class="onoffswitch4-label" for="myonoffswitch4">
+                <span class="onoffswitch4-inner"></span>
+                <span class="onoffswitch4-switch"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="col3">
+          <input
+            type="number"
+            class="form-control"
+            id="delay"
+            placeholder="Delay in Milliseconds"
+            min="1"
+            max="10"
+          />
         </div>
       </div>
       <div class="list-group selectedLocations" id="selectedLocations"></div>

@@ -48,3 +48,15 @@ span {
 #stop {
   width: 90%;
 }
+
+.row2 {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 3fr 1fr 3fr;
+}
+
+.col2 > div {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 20px;
+}

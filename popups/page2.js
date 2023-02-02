@@ -57,7 +57,15 @@ let lastDate = "";
     });
     window.close();
   });
+  ////////////////////////////////
+  $("#myonoffswitch4").change((e) => {
+    $("#myonoffswitch4").val($("#myonoffswitch4").is(":checked"));
+  });
+  /////////
   $("#submit").click(async () => {
+    const loopDelay = Number($("#delay").val());
+    if (loopDelay < 1500) loopDelay = 1500;
+
     const numberOfSlots = document.getElementById("slots").value;
     if (
       numberOfSlots > 0 &&
@@ -65,11 +73,15 @@ let lastDate = "";
       selectedValues.length &&
       lastDate
     ) {
+      const is_loop = $("#myonoffswitch4").val() === "true" ? true : false;
+
       await chrome.storage.local.set({
         GOV_UK_DATA: {
           locations: selectedValues,
           slots: parseInt(numberOfSlots),
           lastDate: lastDate,
+          is_loop: is_loop,
+          loopDelay: loopDelay,
         },
       });
       const [tab] = await chrome.tabs.query({
