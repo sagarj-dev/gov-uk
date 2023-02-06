@@ -63,7 +63,7 @@ let lastDate = "";
   });
   /////////
   $("#submit").click(async () => {
-    const loopDelay = Number($("#delay").val());
+    let loopDelay = Number($("#delay").val());
     if (loopDelay < 1500) loopDelay = 1500;
 
     const numberOfSlots = document.getElementById("slots").value;

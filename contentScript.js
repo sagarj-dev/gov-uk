@@ -235,8 +235,6 @@ async function isValidWeek(selectedDate) {
       resolve("last");
     }
     if (startDate > selectedDate && endDate > selectedDate) {
-      console.log("startDate > selectedDate", startDate > selectedDate);
-      console.log("endDate > selectedDate", endDate > selectedDate);
       resolve("notValid");
     }
   });
@@ -267,25 +265,38 @@ async function compareDayName(slotDayName, selectedDate) {
     }
   });
 }
-
+const sleep = () => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, genarateDelaySec());
+  });
+};
 async function checkForSlotOnPage() {
+  console.log("checking for slots");
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
-
+  if (GOV_UK_DATA.slots === 0) return;
   let week = await isValidWeek(GOV_UK_DATA.lastDate);
 
   if (week === "valid") {
     if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
-      for (let index = 0; index < 5; index++) {
+      while (week === "valid") {
+        console.log("in while loop");
         const slotsArray = document.querySelectorAll(".slotsavailable a");
         if (slotsArray.length) {
           increaseClickCound();
           slotsArray[0].click();
+          console.log("found slots and breaking loop");
+          break;
         } else {
           const nextButton = await waitForElm(
             "#searchForWeeklySlotsNextAvailable"
           );
           increaseClickCound();
           nextButton.click();
+          await sleep();
+          week = await isValidWeek(GOV_UK_DATA.lastDate);
+          console.log(`clicked next available and week is ${week}`);
         }
       }
     }
@@ -303,6 +314,7 @@ async function checkForSlotOnPage() {
             if (await compareDayName(dayName, GOV_UK_DATA.lastDate)) {
               const aTage = slot.childNodes[1];
               aTage.click();
+              break;
             } else {
               setTimeout(() => {
                 calcelProcess();
@@ -363,6 +375,16 @@ async function calcelProcess() {
         console.log("calling loop");
         checkForSlotOnPage();
       }, GOV_UK_DATA.loopDelay);
+    } else {
+      await chrome.storage.local.set({
+        GOV_UK_DATA: {
+          locations: [],
+          slots: 0,
+          lastDate: null,
+          status: null,
+          is_loop: false,
+        },
+      });
     }
   }
 }
