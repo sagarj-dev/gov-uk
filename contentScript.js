@@ -352,7 +352,6 @@ async function calcelProcess() {
       nextButton.click();
     }
   } else {
-    alert("cant find anymore slots");
     const prevButton = document.getElementById(
       "searchForWeeklySlotsPreviousAvailable"
     );

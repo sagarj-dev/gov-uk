@@ -32,5 +32,5 @@
     }
   ],
   "host_permissions": ["*://*.gov.uk/*"],
-  "permissions": ["tabs", "storage"]
+  "permissions": ["tabs", "storage", "notifications"]
 }
