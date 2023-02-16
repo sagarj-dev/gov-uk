@@ -1,18 +1,6 @@
 let selectedValues = [];
 let lastDate = "";
 (async function () {
-  var options = {
-    type: "basic",
-    title: "Notification from opengenus foundation",
-    message: "https://iq.opengenus.org",
-    iconUrl: "icon128.png",
-  };
-
-  chrome.notifications.create(options, callback);
-
-  function callback() {
-    console.log("Popup done!");
-  }
   //////////////////////////
   const { GOVUK_LOCATIONS } = await chrome.storage.local.get("GOVUK_LOCATIONS");
   const { GOVUK_DEFAULT_LOCATION } = await chrome.storage.local.get(

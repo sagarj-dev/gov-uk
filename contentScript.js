@@ -352,6 +352,11 @@ async function calcelProcess() {
       nextButton.click();
     }
   } else {
+    // alert("cant find anymore slots");
+    console.log("sending notification");
+    await chrome.runtime.sendMessage({
+      type: "OPEN_NOTIFICATION",
+    });
     const prevButton = document.getElementById(
       "searchForWeeklySlotsPreviousAvailable"
     );
