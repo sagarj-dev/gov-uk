@@ -186,23 +186,20 @@ async function resetClicks() {
 
 async function addCenter() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
-  if (!GOV_UK_DATA.initialDate) {
-    await chrome.storage.local.set({
-      ...GOV_UK_DATA,
-      initialDate: getInitialDate(),
-    });
-  }
+
   if (GOV_UK_DATA.locations.length > 0) {
-    const value = GOV_UK_DATA.locations.shift();
-    if (GOV_UK_DATA.locations.length == 0) {
-      GOV_UK_DATA.status = "start_looking_for_slots";
+    if (!GOV_UK_DATA.initialDate) {
+      GOV_UK_DATA.initialDate = await getInitialDate();
+      await chrome.storage.local.set(GOV_UK_DATA);
     }
+    const locationToAdd = GOV_UK_DATA.locations.shift();
+
     await chrome.storage.local.set({
       GOV_UK_DATA,
     });
 
     const select = await waitForElm("#add_testcentre");
-    select.value = value;
+    select.value = locationToAdd;
     const addCenterButton = await waitForElm("#submitAddAdditionalTestCentre");
     increaseClickCound();
     addCenterButton.click();
@@ -267,11 +264,11 @@ async function compareDayName(slotDayName, selectedDate) {
     }
   });
 }
-const sleep = () => {
+const sleep = (x) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve();
-    }, genarateDelaySec());
+    }, x && genarateDelaySec());
   });
 };
 async function checkForSlotOnPage() {
@@ -283,19 +280,17 @@ async function checkForSlotOnPage() {
     if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
       while (week === "valid") {
         const slotsArray = document.querySelectorAll(".slotsavailable a");
-        if (slotsArray.length) {
+        if (slotsArray.length > 0) {
           increaseClickCound();
           slotsArray[0].click();
-
           break;
         } else {
-          const nextButton = await waitForElm(
-            "#searchForWeeklySlotsNextAvailable"
-          );
+          const nextButton = await waitForElm("#searchForWeeklySlotsNextWeek");
           increaseClickCound();
           nextButton.click();
-          await sleep();
-          week = await isValidWeek(GOV_UK_DATA.lastDate);
+          await sleep(1000);
+          checkForSlotOnPage();
+          break;
         }
       }
     }
@@ -305,7 +300,6 @@ async function checkForSlotOnPage() {
     if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
       setTimeout(async () => {
         let slots = document.querySelectorAll(".slotsavailable");
-
         if (slots.length > 0) {
           for (let index = 0; index < slots.length; index++) {
             const slot = slots[index];
@@ -334,8 +328,40 @@ async function checkForSlotOnPage() {
 }
 
 async function goToStartDate() {
-  // while (getInitialDate() ===  ) {
-  // }
+  const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+
+  while ((await getInitialDate()) !== GOV_UK_DATA.initialDate) {
+    const prevWeekButton = document.getElementById(
+      "searchForWeeklySlotsPreviousWeek"
+    );
+    if (prevWeekButton) {
+      increaseClickCound();
+      prevWeekButton.click();
+      await sleep(2000);
+      const slotsArray = document.querySelectorAll(".slotsavailable a");
+      if (slotsArray.length > 0) {
+        increaseClickCound();
+        slotsArray[0].click();
+        break;
+      }
+    }
+  }
+
+  if (GOV_UK_DATA.is_loop) {
+    setTimeout(() => {
+      checkForSlotOnPage();
+    }, GOV_UK_DATA.loopDelay);
+  } else {
+    await chrome.storage.local.set({
+      GOV_UK_DATA: {
+        locations: [],
+        slots: 0,
+        lastDate: null,
+        status: null,
+        is_loop: false,
+      },
+    });
+  }
 }
 
 async function getInitialDate() {
@@ -356,6 +382,7 @@ async function calcelProcess() {
         lastDate: null,
         status: null,
         is_loop: false,
+        initialDate: "",
       },
     });
     const nextButton = document.getElementById("bookReserved");
@@ -369,38 +396,8 @@ async function calcelProcess() {
     await chrome.runtime.sendMessage({
       type: "OPEN_NOTIFICATION",
     });
-    const prevButton = document.getElementById(
-      "searchForWeeklySlotsPreviousAvailable"
-    );
-    if (prevButton) {
-      increaseClickCound();
-      prevButton.click();
-      setTimeout(() => {
-        const errElm = document.getElementsByClassName("error");
-        const prevWeekButton = document.getElementById(
-          "searchForWeeklySlotsPreviousWeek"
-        );
-        if (errElm && prevWeekButton) {
-          increaseClickCound();
-          prevWeekButton.click();
-        }
-      }, 500);
-    }
-    if (GOV_UK_DATA.is_loop) {
-      setTimeout(() => {
-        checkForSlotOnPage();
-      }, GOV_UK_DATA.loopDelay);
-    } else {
-      await chrome.storage.local.set({
-        GOV_UK_DATA: {
-          locations: [],
-          slots: 0,
-          lastDate: null,
-          status: null,
-          is_loop: false,
-        },
-      });
-    }
+    await sleep(100);
+    goToStartDate();
   }
 }
 
