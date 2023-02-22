@@ -82,6 +82,7 @@ let lastDate = "";
           lastDate: lastDate,
           is_loop: is_loop,
           loopDelay: loopDelay,
+          initialDate: "",
         },
       });
       const [tab] = await chrome.tabs.query({

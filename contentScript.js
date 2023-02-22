@@ -33,25 +33,20 @@ async function increaseClickCound() {
   let { GOVUK_CLICKS } = await chrome.storage.local.get("GOVUK_CLICKS");
 
   if (GOVUK_CLICKS || GOVUK_CLICKS === 0) {
-    console.log(GOVUK_CLICKS);
     await chrome.storage.local.set({ GOVUK_CLICKS: GOVUK_CLICKS + 1 });
   } else {
     await chrome.storage.local.set({ GOVUK_CLICKS: 0 });
   }
 }
 async function resetClicks() {
-  console.log("reset fun runs");
   let { GOVUK_CLICKS_DATE } = await chrome.storage.local.get(
     "GOVUK_CLICKS_DATE"
   ); // prev date
   let todayDate = new Date();
-  console.log("storage date", GOVUK_CLICKS_DATE);
-  console.log("today date", todayDate.getDate());
 
   if (GOVUK_CLICKS_DATE) {
     if (GOVUK_CLICKS_DATE != todayDate.getDate()) {
       // date is diffrent
-      console.log("clicks reset done");
       await chrome.storage.local.set({ GOVUK_CLICKS: 0 }); // reset click to zero
       await chrome.storage.local.set({
         GOVUK_CLICKS_DATE: todayDate.getDate(),
@@ -87,6 +82,7 @@ async function resetClicks() {
     );
     selectTestCategory.value = "TC-B";
     document.querySelectorAll(`input[value="NO"]`)[0].click();
+
     await chrome.runtime.sendMessage({
       type: "SET_POPUP",
       payload: "./popups/page1.html",
@@ -190,6 +186,12 @@ async function resetClicks() {
 
 async function addCenter() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+  if (!GOV_UK_DATA.initialDate) {
+    await chrome.storage.local.set({
+      ...GOV_UK_DATA,
+      initialDate: getInitialDate(),
+    });
+  }
   if (GOV_UK_DATA.locations.length > 0) {
     const value = GOV_UK_DATA.locations.shift();
     if (GOV_UK_DATA.locations.length == 0) {
@@ -273,7 +275,6 @@ const sleep = () => {
   });
 };
 async function checkForSlotOnPage() {
-  console.log("checking for slots");
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
   if (GOV_UK_DATA.slots === 0) return;
   let week = await isValidWeek(GOV_UK_DATA.lastDate);
@@ -281,12 +282,11 @@ async function checkForSlotOnPage() {
   if (week === "valid") {
     if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
       while (week === "valid") {
-        console.log("in while loop");
         const slotsArray = document.querySelectorAll(".slotsavailable a");
         if (slotsArray.length) {
           increaseClickCound();
           slotsArray[0].click();
-          console.log("found slots and breaking loop");
+
           break;
         } else {
           const nextButton = await waitForElm(
@@ -296,7 +296,6 @@ async function checkForSlotOnPage() {
           nextButton.click();
           await sleep();
           week = await isValidWeek(GOV_UK_DATA.lastDate);
-          console.log(`clicked next available and week is ${week}`);
         }
       }
     }
@@ -334,6 +333,19 @@ async function checkForSlotOnPage() {
   }
 }
 
+async function goToStartDate() {
+  // while (getInitialDate() ===  ) {
+  // }
+}
+
+async function getInitialDate() {
+  let weekrenge = document
+    .querySelectorAll(".clearfix .span-7 .centre.bold")[0]
+    .innerText.trim();
+
+  let initialDate = weekrenge.split("–")[0].trim();
+  return initialDate;
+}
 async function calcelProcess() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
   if (GOV_UK_DATA.slots === 0) {
@@ -353,7 +365,7 @@ async function calcelProcess() {
     }
   } else {
     // alert("cant find anymore slots");
-    console.log("sending notification");
+
     await chrome.runtime.sendMessage({
       type: "OPEN_NOTIFICATION",
     });
@@ -376,7 +388,6 @@ async function calcelProcess() {
     }
     if (GOV_UK_DATA.is_loop) {
       setTimeout(() => {
-        console.log("calling loop");
         checkForSlotOnPage();
       }, GOV_UK_DATA.loopDelay);
     } else {
