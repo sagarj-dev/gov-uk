@@ -10,11 +10,11 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
   const { GOVUK_CLICKS } = await chrome.storage.local.get("GOVUK_CLICKS");
 
   if (GOVUK_CLICKS) {
-    chrome.action.setBadgeText({ text: GOVUK_CLICKS.toString() });
+    chrome.action.setBadgeText({ text: GOVUK_CLICKS?.toString() || "" });
     // chrome.action.setBadgeBackgroundColor({ color: "#F00" });
     // chrome.action.setBadgeTextColor({ color: "#fff" });
   } else {
-    chrome.action.setBadgeText({ text: GOVUK_CLICKS.toString() });
+    chrome.action.setBadgeText({ text: GOVUK_CLICKS?.toString() || "" });
     // chrome.action.setBadgeBackgroundColor({ color: "#F00" });
     // chrome.action.setBadgeTextColor({ color: "#fff" });
   }

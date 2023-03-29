@@ -83,10 +83,12 @@ async function resetClicks() {
     selectTestCategory.value = "TC-B";
     document.querySelectorAll(`input[value="NO"]`)[0].click();
 
-    await chrome.runtime.sendMessage({
-      type: "SET_POPUP",
-      payload: "./popups/page1.html",
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        type: "SET_POPUP",
+        payload: "./popups/page1.html",
+      });
+    } catch (error) {}
     await chrome.storage.local.set({
       GOV_UK_DATA: { slots: 0, locations: [] },
     });
@@ -95,10 +97,12 @@ async function resetClicks() {
 
   /////////// PAGE 2 - Test centre availability  ////////////
   if (document.getElementById("submitAddAdditionalTestCentre")) {
-    await chrome.runtime.sendMessage({
-      type: "SET_POPUP",
-      payload: "./popups/page2.html",
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        type: "SET_POPUP",
+        payload: "./popups/page2.html",
+      });
+    } catch (error) {}
 
     const options = document.querySelectorAll("option[value]");
     let optionsJSON = [];
@@ -122,8 +126,8 @@ async function resetClicks() {
     await chrome.storage.local.set({ GOVUK_LOCATIONS: optionsJSON });
     setTimeout(() => {
       addCenter();
-      checkForSlotOnPage();
     }, genarateDelaySec());
+    checkForSlotOnPage();
     // isValidWeek("s");
   }
 
@@ -135,63 +139,74 @@ async function resetClicks() {
       .getElementsByClassName("laquo")[0]
       ?.innerText.includes("Return to search results")
   ) {
-    await chrome.runtime.sendMessage({
-      type: "SET_POPUP",
-      payload: "./popups/page3.html",
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        type: "SET_POPUP",
+        payload: "./popups/page3.html",
+      });
+    } catch (error) {}
 
-    setTimeout(() => {
-      bookSlot();
-    }, genarateDelaySec());
+    bookSlot();
   }
 
   //////////////// PAGE 4 - submitDismissReservedSlotMessage///////////
 
   if (document.getElementById("submitDismissReservedSlotMessage")) {
-    await chrome.runtime.sendMessage({
-      type: "SET_POPUP",
-      payload: "./popups/page4.html",
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        type: "SET_POPUP",
+        payload: "./popups/page4.html",
+      });
+    } catch (error) {}
   }
   //////////////// PAGE 5 - add candidate list///////////
 
   if (document.getElementById("addBookingDetails")) {
-    await chrome.runtime.sendMessage({
-      type: "SET_POPUP",
-      payload: "./popups/page5.html",
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        type: "SET_POPUP",
+        payload: "./popups/page5.html",
+      });
+    } catch (error) {}
   }
 
   //////////////// PAGE 6 - add candidate detail page///////////
 
   if (document.getElementById("addBookingToOrder")) {
-    await chrome.runtime.sendMessage({
-      type: "SET_POPUP",
-      payload: "./popups/page6.html",
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        type: "SET_POPUP",
+        payload: "./popups/page6.html",
+      });
+    } catch (error) {}
   }
 
   ////// handle add center////////
 
-  chrome.runtime.onMessage.addListener(async function (
-    request,
-    sender,
-    sendResponse
-  ) {
-    if (request.type === "ADD_LOCATION") {
-      addCenter();
-    }
-  });
+  try {
+    chrome.runtime.onMessage.addListener(async function (
+      request,
+      sender,
+      sendResponse
+    ) {
+      if (request.type === "ADD_LOCATION") {
+        let initialDate = getInitialDate();
+        const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+        await chrome.storage.local.set({
+          GOV_UK_DATA: {
+            ...GOV_UK_DATA,
+            initialDate,
+          },
+        });
+        addCenter();
+      }
+    });
+  } catch (error) {}
 })();
 
 async function addCenter() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
-  if (!GOV_UK_DATA.initialDate) {
-    await chrome.storage.local.set({
-      ...GOV_UK_DATA,
-      initialDate: getInitialDate(),
-    });
-  }
+
   if (GOV_UK_DATA.locations.length > 0) {
     const value = GOV_UK_DATA.locations.shift();
     if (GOV_UK_DATA.locations.length == 0) {
@@ -210,7 +225,7 @@ async function addCenter() {
 }
 
 async function isValidWeek(selectedDate) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     selectedDate = new Date(selectedDate);
     let weekrenge = document
       .querySelectorAll(".clearfix .span-7 .centre.bold")[0]
@@ -224,6 +239,21 @@ async function isValidWeek(selectedDate) {
     arr[1] = arr[1].trim().split(" ");
     arr[1][0] = arr[1][0].slice(0, -2);
     let endDate = new Date(arr[1].join(" "));
+    const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
+    // console.log("initialDate Date", new Date(GOV_UK_DATA.initialDate));
+    // console.log("START Date", startDate);
+
+    // console.log(
+    //   "initialDate compare",
+    //   new Date(GOV_UK_DATA.initialDate) < startDate
+    // );
+    // await sleep(10000);
+    if (
+      GOV_UK_DATA.initialDate &&
+      startDate < new Date(GOV_UK_DATA.initialDate)
+    ) {
+      resolve("prev");
+    }
 
     if (endDate < selectedDate && startDate < selectedDate) {
       resolve("valid");
@@ -267,18 +297,30 @@ async function compareDayName(slotDayName, selectedDate) {
     }
   });
 }
-const sleep = () => {
+const sleep = (x) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve();
-    }, genarateDelaySec());
+    }, x || genarateDelaySec());
   });
 };
 async function checkForSlotOnPage() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
   if (GOV_UK_DATA.slots === 0) return;
   let week = await isValidWeek(GOV_UK_DATA.lastDate);
-
+  console.log("WEEK IS", week);
+  // await sleep(5000);
+  if (week === "prev") {
+    setTimeout(async () => {
+      console.log("clicking next button");
+      const nextButton = await waitForElm("#searchForWeeklySlotsNextAvailable");
+      increaseClickCound();
+      nextButton.click();
+      setTimeout(() => {
+        checkForSlotOnPage();
+      }, 500);
+    }, GOV_UK_DATA.loopDelay);
+  }
   if (week === "valid") {
     if (GOV_UK_DATA.slots && GOV_UK_DATA.locations.length == 0) {
       while (week === "valid") {
@@ -338,13 +380,16 @@ async function goToStartDate() {
   // }
 }
 
-async function getInitialDate() {
+function getInitialDate() {
   let weekrenge = document
     .querySelectorAll(".clearfix .span-7 .centre.bold")[0]
     .innerText.trim();
 
-  let initialDate = weekrenge.split("–")[0].trim();
-  return initialDate;
+  let arr = weekrenge.split("–");
+  arr[0] = arr[0].trim().split(" ");
+  arr[0][0] = arr[0][0].slice(0, -2);
+  let initialDate = new Date(arr[0].join(" "));
+  return initialDate.toISOString();
 }
 async function calcelProcess() {
   const { GOV_UK_DATA } = await chrome.storage.local.get("GOV_UK_DATA");
@@ -356,6 +401,7 @@ async function calcelProcess() {
         lastDate: null,
         status: null,
         is_loop: false,
+        initialDate: "",
       },
     });
     const nextButton = document.getElementById("bookReserved");
@@ -366,25 +412,17 @@ async function calcelProcess() {
   } else {
     // alert("cant find anymore slots");
 
-    await chrome.runtime.sendMessage({
-      type: "OPEN_NOTIFICATION",
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        type: "OPEN_NOTIFICATION",
+      });
+    } catch (error) {}
     const prevButton = document.getElementById(
       "searchForWeeklySlotsPreviousAvailable"
     );
     if (prevButton) {
       increaseClickCound();
       prevButton.click();
-      setTimeout(() => {
-        const errElm = document.getElementsByClassName("error");
-        const prevWeekButton = document.getElementById(
-          "searchForWeeklySlotsPreviousWeek"
-        );
-        if (errElm && prevWeekButton) {
-          increaseClickCound();
-          prevWeekButton.click();
-        }
-      }, 500);
     }
     if (GOV_UK_DATA.is_loop) {
       setTimeout(() => {
