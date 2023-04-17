@@ -64,7 +64,7 @@ let lastDate = "";
   /////////
   $("#submit").click(async () => {
     let loopDelay = Number($("#delay").val());
-    if (loopDelay < 1500) loopDelay = 1500;
+    if (loopDelay < 500) loopDelay = 500;
 
     const numberOfSlots = document.getElementById("slots").value;
     if (

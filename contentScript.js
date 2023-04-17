@@ -30,13 +30,18 @@ function waitForElm(selector) {
 }
 
 async function increaseClickCound() {
-  let { GOVUK_CLICKS } = await chrome.storage.local.get("GOVUK_CLICKS");
+  try {
+    await chrome.runtime.sendMessage({
+      type: "UPDATE_CLICK_COUNT",
+    });
+  } catch (error) {}
+  // let { GOVUK_CLICKS } = await chrome.storage.local.get("GOVUK_CLICKS");
 
-  if (GOVUK_CLICKS || GOVUK_CLICKS === 0) {
-    await chrome.storage.local.set({ GOVUK_CLICKS: GOVUK_CLICKS + 1 });
-  } else {
-    await chrome.storage.local.set({ GOVUK_CLICKS: 0 });
-  }
+  // if (GOVUK_CLICKS || GOVUK_CLICKS === 0) {
+  //   await chrome.storage.local.set({ GOVUK_CLICKS: GOVUK_CLICKS + 1 });
+  // } else {
+  //   await chrome.storage.local.set({ GOVUK_CLICKS: 0 });
+  // }
 }
 async function resetClicks() {
   let { GOVUK_CLICKS_DATE } = await chrome.storage.local.get(
@@ -81,6 +86,7 @@ async function resetClicks() {
       "businessBookingTestCategoryRecordId"
     );
     selectTestCategory.value = "TC-B";
+    increaseClickCound();
     document.querySelectorAll(`input[value="NO"]`)[0].click();
 
     try {
@@ -126,7 +132,7 @@ async function resetClicks() {
     await chrome.storage.local.set({ GOVUK_LOCATIONS: optionsJSON });
     setTimeout(() => {
       addCenter();
-    }, genarateDelaySec());
+    }, 500);
     checkForSlotOnPage();
     // isValidWeek("s");
   }
@@ -301,7 +307,7 @@ const sleep = (x) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve();
-    }, x || genarateDelaySec());
+    }, x || 500);
   });
 };
 async function checkForSlotOnPage() {
@@ -354,6 +360,7 @@ async function checkForSlotOnPage() {
             let dayName = slot.headers;
             if (await compareDayName(dayName, GOV_UK_DATA.lastDate)) {
               const aTage = slot.childNodes[1];
+              increaseClickCound();
               aTage.click();
               break;
             } else {

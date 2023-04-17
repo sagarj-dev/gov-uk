@@ -11,12 +11,8 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 
   if (GOVUK_CLICKS) {
     chrome.action.setBadgeText({ text: GOVUK_CLICKS?.toString() || "" });
-    // chrome.action.setBadgeBackgroundColor({ color: "#F00" });
-    // chrome.action.setBadgeTextColor({ color: "#fff" });
   } else {
     chrome.action.setBadgeText({ text: GOVUK_CLICKS?.toString() || "" });
-    // chrome.action.setBadgeBackgroundColor({ color: "#F00" });
-    // chrome.action.setBadgeTextColor({ color: "#fff" });
   }
   chrome.runtime.onMessage.addListener(async function (
     request,
@@ -28,9 +24,18 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
         popup: request.payload,
       });
     }
+    if (request.type === "UPDATE_CLICK_COUNT") {
+      let { GOVUK_CLICKS } = await chrome.storage.local.get("GOVUK_CLICKS");
+
+      if (GOVUK_CLICKS || GOVUK_CLICKS === 0) {
+        await chrome.storage.local.set({ GOVUK_CLICKS: GOVUK_CLICKS + 1 });
+      } else {
+        await chrome.storage.local.set({ GOVUK_CLICKS: 0 });
+      }
+      chrome.action.setBadgeText({ text: (GOVUK_CLICKS + 1).toString() || "" });
+    }
     if (request.type === "OPEN_NOTIFICATION") {
       if (notificationStatus) {
-        console.log("++>");
         notificationStatus = false;
         var options = {
           type: "basic",
